@@ -25,15 +25,15 @@ import { AVATARS } from "@/app/lib/constants";
 
 const DEFAULT_CONFIG: StartAvatarRequest = {
   quality: AvatarQuality.High,
-  avatarName: "Marianne_Chair_Sitting_public",
-  knowledgeId: "11e2a58a10004f679101e9a9477a6da0",
+  avatarName: "Elenora_FitnessCoach2_public",
+  knowledgeId: "eb63bf40cd3e49639b1e96df629a6f3a",
   voice: {
     rate: 1.0,
     emotion: "friendly" as VoiceEmotion,
     model: ElevenLabsModel.eleven_flash_v2_5,
-    voiceId: "a78e0a4dbbe247d0a704b91175e6d987",
+    voiceId: "e7f265ef0dc7426e8ed217c58da7e371",
   },
-  language: "es",
+  language: "en",
   voiceChatTransport: VoiceChatTransport.WEBSOCKET,
   sttSettings: {
     provider: STTProvider.DEEPGRAM,

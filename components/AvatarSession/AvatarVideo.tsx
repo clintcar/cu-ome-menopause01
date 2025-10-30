@@ -34,7 +34,7 @@ export const AvatarVideo = forwardRef<HTMLVideoElement>(({}, ref) => {
       {isLoaded && (
         <Button
           className="absolute top-3 right-3 !p-2 bg-zinc-700 bg-opacity-50 z-10"
-          onClick={handleClose}
+          onClick={stopAvatar}
         >
           <CloseIcon />
         </Button>
