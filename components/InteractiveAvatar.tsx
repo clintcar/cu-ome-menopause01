@@ -15,10 +15,11 @@ import { AvatarConfig } from "./AvatarConfig";
 import { AvatarVideo } from "./AvatarSession/AvatarVideo";
 import { useStreamingAvatarSession } from "./logic/useStreamingAvatarSession";
 import { AvatarControls } from "./AvatarSession/AvatarControls";
+import { AudioInput } from "./AvatarSession/AudioInput";
 import { useVoiceChat } from "./logic/useVoiceChat";
 import { useTextChat } from "./logic/useTextChat";
 import { StreamingAvatarProvider, StreamingAvatarSessionState } from "./logic";
-import { LoadingIcon } from "./Icons";
+import { LoadingIcon, FullscreenIcon, FullscreenExitIcon } from "./Icons";
 import { MessageHistory } from "./AvatarSession/MessageHistory";
 
 import { AVATARS } from "@/app/lib/constants";
@@ -43,12 +44,17 @@ const DEFAULT_CONFIG: StartAvatarRequest = {
 function InteractiveAvatar() {
   const { initAvatar, startAvatar, stopAvatar, sessionState, stream } =
     useStreamingAvatarSession();
-  const { startVoiceChat } = useVoiceChat();
+  const { startVoiceChat, isVoiceChatActive } = useVoiceChat();
   const { sendMessage } = useTextChat();
 
   const [config, setConfig] = useState<StartAvatarRequest>(DEFAULT_CONFIG);
+  const [backgroundImage, setBackgroundImage] = useState<string>("demo.png");
+  const [sessionDuration, setSessionDuration] = useState<number>(10); // in minutes
+  const [customDuration, setCustomDuration] = useState<string>("");
+  const [remainingTime, setRemainingTime] = useState<number | null>(null);
   const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
 
   const mediaStream = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -57,13 +63,55 @@ function InteractiveAvatar() {
     try {
       if (!document.fullscreenElement) {
         await containerRef.current?.requestFullscreen?.();
+        setIsFullscreen(true);
       } else {
         await document.exitFullscreen();
+        setIsFullscreen(false);
       }
     } catch (err) {
       console.error("Fullscreen toggle failed", err);
     }
   });
+
+  // Track fullscreen state changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    };
+  }, []);
+
+  // Session duration timer
+  useEffect(() => {
+    if (sessionState === StreamingAvatarSessionState.CONNECTED && remainingTime === null) {
+      const durationInSeconds = sessionDuration * 60;
+      setRemainingTime(durationInSeconds);
+    } else if (sessionState === StreamingAvatarSessionState.INACTIVE) {
+      setRemainingTime(null);
+    }
+  }, [sessionState, sessionDuration, remainingTime]);
+
+  useEffect(() => {
+    if (remainingTime !== null && remainingTime > 0) {
+      const interval = setInterval(() => {
+        setRemainingTime((prev) => {
+          if (prev === null || prev <= 1) {
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(interval);
+    } else if (remainingTime === 0 && sessionState === StreamingAvatarSessionState.CONNECTED) {
+      // Stop session when timer reaches 0
+      stopAvatar();
+    }
+  }, [remainingTime, sessionState, stopAvatar]);
 
   async function fetchAccessToken() {
     try {
@@ -158,7 +206,13 @@ function InteractiveAvatar() {
             <Button onClick={() => startSessionV2(false)}>Start Text Chat</Button>
           </div>
         )}
-        <div ref={containerRef} className="relative w-full aspect-video overflow-hidden flex flex-col items-center justify-center">
+        <div 
+          ref={containerRef} 
+          className="relative w-full aspect-video overflow-hidden flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: backgroundImage ? `url(/${backgroundImage})` : undefined
+          }}
+        >
           {sessionState !== StreamingAvatarSessionState.INACTIVE ? (
             <AvatarVideo ref={mediaStream} />
           ) : (
@@ -167,18 +221,32 @@ function InteractiveAvatar() {
           {/* <div className="absolute top-8 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-75 text-white px-6 py-2 rounded-md text-lg font-medium">
             María Teresa Fuster
           </div> */}
-          <button
-            aria-label="Toggle Full Screen"
-            onClick={toggleFullscreen}
-            className="absolute bottom-4 right-4 bg-zinc-900 text-white px-3 py-1 rounded-md text-sm"
-          >
-            Full Screen
-          </button>
+          {(sessionState !== StreamingAvatarSessionState.INACTIVE || isFullscreen) && (
+            <Button
+              aria-label="Toggle Full Screen"
+              onClick={toggleFullscreen}
+              className="absolute bottom-4 right-4 !p-2 !bg-zinc-900 !bg-opacity-75 hover:!bg-opacity-90 z-10 !text-white"
+            >
+              {isFullscreen ? (
+                <FullscreenExitIcon size={20} className="text-white" />
+              ) : (
+                <FullscreenIcon size={20} className="text-white" />
+              )}
+            </Button>
+          )}
           {sessionState === StreamingAvatarSessionState.CONNECTED && (
-            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-75 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2">
-              <div className={`w-3 h-3 rounded-full ${isSpeaking ? 'bg-red-500 animate-pulse' : 'bg-green-500'}`}></div>
-              {isSpeaking ? 'Avatar is speaking' : 'Avatar is listening'}
-            </div>
+            <>
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-75 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center gap-3">
+                <div className={`w-3 h-3 rounded-full ${isSpeaking ? 'bg-red-500 animate-pulse' : 'bg-green-500'}`}></div>
+                <span>{isSpeaking ? 'Avatar is speaking' : 'Avatar is listening'}</span>
+                {isVoiceChatActive && <AudioInput />}
+              </div>
+              {remainingTime !== null && (
+                <div className="absolute top-4 left-4 bg-black bg-opacity-75 text-white px-3 py-2 rounded-md text-sm font-medium">
+                  Time remaining: {Math.floor(remainingTime / 60)}:{(remainingTime % 60).toString().padStart(2, "0")}
+                </div>
+              )}
+            </>
           )}
         </div>
         {sessionState === StreamingAvatarSessionState.INACTIVE && (
@@ -191,7 +259,16 @@ function InteractiveAvatar() {
             </div>
             {isSettingsOpen && (
               <div className="p-4">
-                <AvatarConfig config={config} onConfigChange={setConfig} />
+                <AvatarConfig 
+                  config={config} 
+                  onConfigChange={setConfig}
+                  backgroundImage={backgroundImage}
+                  onBackgroundImageChange={setBackgroundImage}
+                  sessionDuration={sessionDuration}
+                  onSessionDurationChange={setSessionDuration}
+                  customDuration={customDuration}
+                  onCustomDurationChange={setCustomDuration}
+                />
               </div>
             )}
           </div>

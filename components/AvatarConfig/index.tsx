@@ -18,11 +18,23 @@ import { AVATARS, STT_LANGUAGE_LIST } from "@/app/lib/constants";
 interface AvatarConfigProps {
   onConfigChange: (config: StartAvatarRequest) => void;
   config: StartAvatarRequest;
+  backgroundImage?: string;
+  onBackgroundImageChange?: (image: string) => void;
+  sessionDuration?: number;
+  onSessionDurationChange?: (duration: number) => void;
+  customDuration?: string;
+  onCustomDurationChange?: (duration: string) => void;
 }
 
 export const AvatarConfig: React.FC<AvatarConfigProps> = ({
   onConfigChange,
   config,
+  backgroundImage,
+  onBackgroundImageChange,
+  sessionDuration,
+  onSessionDurationChange,
+  customDuration,
+  onCustomDurationChange,
 }) => {
   const onChange = <T extends keyof StartAvatarRequest>(
     key: T,
@@ -54,6 +66,57 @@ export const AvatarConfig: React.FC<AvatarConfigProps> = ({
 
   return (
     <div className="relative flex flex-col gap-4 w-[550px] py-8 max-h-full overflow-y-auto px-4">
+      <Field label="Background Image">
+        <Input
+          placeholder="Enter background image filename (e.g., demo.png)"
+          value={backgroundImage || ""}
+          onChange={(value) => onBackgroundImageChange?.(value)}
+        />
+      </Field>
+      <Field label="Session Duration">
+        <Select
+          isSelected={(option) => {
+            if (option === "custom") {
+              return sessionDuration !== 5 && sessionDuration !== 10 && sessionDuration !== 15 && sessionDuration !== 20;
+            }
+            return option === sessionDuration;
+          }}
+          options={[5, 10, 15, 20, "custom"]}
+          renderOption={(option) => {
+            if (option === "custom") {
+              return "Custom";
+            }
+            return `${option} minutes`;
+          }}
+          value={
+            sessionDuration === 5 || sessionDuration === 10 || sessionDuration === 15 || sessionDuration === 20
+              ? `${sessionDuration} minutes`
+              : "Custom"
+          }
+          onSelect={(option) => {
+            if (option === "custom") {
+              onSessionDurationChange?.(parseInt(customDuration || "10") || 10);
+            } else {
+              onSessionDurationChange?.(option as number);
+            }
+          }}
+        />
+        {(sessionDuration !== 5 && sessionDuration !== 10 && sessionDuration !== 15 && sessionDuration !== 20) && (
+          <div className="mt-2">
+            <Input
+              placeholder="Enter custom duration in minutes"
+              value={customDuration || sessionDuration?.toString() || ""}
+              onChange={(value) => {
+                onCustomDurationChange?.(value);
+                const numValue = parseInt(value);
+                if (!isNaN(numValue) && numValue > 0) {
+                  onSessionDurationChange?.(numValue);
+                }
+              }}
+            />
+          </div>
+        )}
+      </Field>
       <Field label="Custom Knowledge Base ID">
         <Input
           placeholder="Enter custom knowledge base ID"

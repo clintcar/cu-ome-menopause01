@@ -21,19 +21,19 @@ export const AudioInput: React.FC = () => {
   return (
     <div>
       <Button
-        className={`!p-2 relative`}
+        className={`!p-3 relative !bg-[#CFB87C] hover:!bg-[#B8A569] !text-black ${isMuted ? "!bg-red-600 hover:!bg-red-700 !text-white" : ""} ${isUserTalking ? "!bg-green-600 hover:!bg-green-700 !text-white" : ""}`}
         disabled={isVoiceChatLoading}
         onClick={handleMuteClick}
       >
         <div
-          className={`absolute left-0 top-0 rounded-lg border-2 border-[#7559FF] w-full h-full ${isUserTalking ? "animate-ping" : ""}`}
+          className={`absolute left-0 top-0 rounded-lg border-2 ${isMuted || isUserTalking ? "border-white" : "border-black"} w-full h-full ${isUserTalking ? "animate-ping" : ""}`}
         />
         {isVoiceChatLoading ? (
-          <LoadingIcon className="animate-spin" size={20} />
+          <LoadingIcon className="animate-spin" size={24} />
         ) : isMuted ? (
-          <MicOffIcon size={20} />
+          <MicOffIcon size={24} />
         ) : (
-          <MicIcon size={20} />
+          <MicIcon size={24} />
         )}
       </Button>
     </div>

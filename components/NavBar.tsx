@@ -5,14 +5,24 @@ import React from "react";
 export default function NavBar() {
   return (
     <>
-      <div className="flex flex-row justify-between items-center w-[1000px] m-auto p-6">
-        <div className="flex flex-row items-center gap-4">
-          <div>
-            <p className="text-xl font-semibold text-black">
+      <div className="flex flex-row justify-between items-center w-[1000px] m-auto p-6 relative">
+        <div className="flex-1"></div>
+        <div className="flex flex-col gap-1 items-center relative w-full">
+          <p className="text-3xl font-semibold text-black">
             CU Anschutz School of Dental Medicine
-            </p>
+          </p>
+          <div className="absolute right-0 top-full mt-1">
+            <a
+              href="https://www.linkedin.com/in/clintcarlson/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-black hover:underline"
+            >
+              Author: Clint Carlson | Contact
+            </a>
           </div>
         </div>
+        <div className="flex-1"></div>
         {/* Right-side links are intentionally hidden */}
       </div>
     </>
