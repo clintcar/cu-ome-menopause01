@@ -358,7 +358,7 @@ Updated with larger title, centered, and author information:
   <div className="flex-1"></div>
   <div className="flex flex-col gap-1 items-center relative w-full">
     <p className="text-3xl font-semibold text-black">
-      CU Anschutz School of Dental Medicine
+      Menopause Education 01 - Elena Morales
     </p>
     <div className="absolute right-0 top-full mt-1">
       <a
