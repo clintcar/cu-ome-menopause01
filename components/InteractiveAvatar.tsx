@@ -30,9 +30,8 @@ const DEFAULT_CONFIG: StartAvatarRequest = {
   knowledgeId: "154e1d22f5b14a459112c893fb14bea2",
   voice: {
     rate: 1.0,
-    emotion: "friendly" as VoiceEmotion,
+    emotion: "serious" as VoiceEmotion,
     model: ElevenLabsModel.eleven_flash_v2_5,
-    voiceId: "e7f265ef0dc7426e8ed217c58da7e371",
   },
   language: "en",
   voiceChatTransport: VoiceChatTransport.WEBSOCKET,
